@@ -1,18 +1,52 @@
 <template>
   <div>1122</div>
-  <vue3-at>
+  <vue3-at :list="list" keyName="name">
     <div class="editor" contenteditable></div>
+    <template v-slot:customItem="s">
+      <span style="color: red">{{ s }}</span>
+    </template>
   </vue3-at>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { Vue3At } from "../src/";
 
 export default defineComponent({
   name: "App",
   components: {
     Vue3At,
+  },
+  setup() {
+    const list = ref([
+      {
+        isSubjectTitle: true,
+        title: "最近联系人",
+      },
+      {
+        name: "sh",
+        userId: "",
+      },
+      {
+        name: "sh2",
+        userId: "",
+      },
+      {
+        isSubjectTitle: true,
+        title: "好友",
+      },
+      {
+        name: "sh",
+        userId: "",
+      },
+      {
+        name: "sh2",
+        userId: "",
+      },
+    ]);
+    return {
+      list,
+    };
   },
 });
 </script>

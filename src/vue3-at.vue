@@ -7,28 +7,46 @@
     @input="onInput"
   >
     <slot></slot>
-    <div v-if="showAtList" class="at-list">666</div>
+    <AtList
+      v-if="atListVisible"
+      :list="matchedAtList"
+      :curIndex="curIndex"
+      class="at-list"
+    >
+      666
+    </AtList>
+    <span ref="customItem" v-show="false">
+      <slot name="customItem" :item="matchedAtList[curIndex]"></slot>
+    </span>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType, ref } from "vue";
-import { getCurRangeClone } from "./util";
+import { getCurRangeClone, applyRange, KeyCode, isTextNode } from "./util";
+import AtList from "./at-list.vue";
 
 export default defineComponent({
   name: "App",
+  components: {
+    AtList,
+  },
   props: {
     at: {
       type: String,
       default: "@",
     },
     list: {
-      type: Array as PropType<any[]>,
+      type: Array,
       default: () => [],
     },
     keyName: {
       type: String,
       default: "",
+    },
+    showSubjectTitle: {
+      type: Boolean,
+      default: true,
     },
     allowSpaces: {
       type: Boolean,
@@ -39,19 +57,84 @@ export default defineComponent({
         (item: any, chunk: string, keyName?: string) => boolean
       >,
       default: (item: any, chunk: string, keyName?: string) => {
-        console.log("item:", chunk, this);
-        if (!keyName) {
+        console.log("item:", chunk);
+        if (!keyName || item.isSubjectTitle) {
           return true;
         }
         return item[keyName].toLowerCase().includes(chunk.toLowerCase());
       },
     },
   },
-  setup(props) {
-    const showAtList = ref(true);
+  emits: ["at"],
+  setup(props, ctx) {
+    const customItem = ref<HTMLElement>();
+    const atListVisible = ref(false);
+    const curIndex = ref(1);
     let isInComposition = false;
+    const matchedAtList = ref<any[]>([]);
+    let lastInputRange: Range;
+    const insertTextToContent = (text: string, range: Range) => {
+      range.deleteContents();
+      const { endContainer } = range;
+      if (isTextNode(endContainer)) {
+        const cutOffset = range.endOffset;
+        endContainer.data =
+          endContainer.data.slice(0, cutOffset) +
+          text +
+          endContainer.data.slice(cutOffset);
+        range.setEnd(endContainer, cutOffset + text.length);
+      } else {
+        const textNode = document.createTextNode(text);
+        range.insertNode(textNode);
+        range.setEndAfter(textNode);
+      }
+      range.collapse(false);
+      applyRange(range);
+    };
+    const insertCustomHtmlToContent = (text: string, range: Range) => {};
+    const inertCurItemToContent = () => {
+      if (!lastInputRange) return;
+      const rangeClone = lastInputRange.cloneRange();
+      const text = rangeClone.toString();
+      const lastAtIndex = text.lastIndexOf(props.at);
+      if (lastAtIndex === -1) return;
+      rangeClone.setStart(rangeClone.endContainer, lastAtIndex);
+      applyRange(rangeClone);
+      if (ctx.slots.customItem) {
+        const customHtml = customItem.value?.innerHTML;
+        console.log("customHtml:", customHtml);
+      } else {
+        const itemText = matchedAtList.value[curIndex.value][props.keyName];
+        insertTextToContent(props.at + itemText, rangeClone);
+      }
+      atListVisible.value = false;
+    };
+
+    const onPressUpOrDown = (keyCode: number) => {
+      if (!atListVisible.value) return;
+      const offset = keyCode === KeyCode.up ? -1 : 1;
+      let nextIndex = curIndex.value + offset;
+      nextIndex = Math.min(
+        Math.max(nextIndex, 0),
+        matchedAtList.value.length - 1
+      );
+      // subject title不可选中
+      while (
+        matchedAtList.value[nextIndex] &&
+        matchedAtList.value[nextIndex].isSubjectTitle
+      ) {
+        nextIndex += offset;
+        if (nextIndex < 0) {
+          nextIndex += 2;
+        }
+      }
+      curIndex.value = nextIndex;
+    };
     return {
-      showAtList,
+      customItem,
+      atListVisible,
+      matchedAtList,
+      curIndex,
       onCompositionStart() {
         isInComposition = true;
       },
@@ -60,27 +143,53 @@ export default defineComponent({
         console.log("handleCompositionEnd");
       },
       onKeyDown(e: KeyboardEvent) {
-        // if (showAtList.value) {
-        //   console.log("e:", e);
-        // }
+        if (!atListVisible.value) return;
+        if (e.keyCode === KeyCode.enter) {
+          inertCurItemToContent();
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+        if (e.keyCode === KeyCode.up || e.keyCode === KeyCode.down) {
+          onPressUpOrDown(e.keyCode);
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
       },
       onInput() {
         if (isInComposition) return;
         const curRangeClone = getCurRangeClone();
         if (!curRangeClone) return;
+        lastInputRange = curRangeClone.cloneRange();
         const text = curRangeClone.toString();
         const lastAtIndex = text.lastIndexOf(props.at);
         if (lastAtIndex === -1) return;
         const inputChunk = text.slice(lastAtIndex + props.at.length);
-        let showFilterResult = false;
+        let showFilterResult = true;
         if (!props.allowSpaces && /\s/.test(inputChunk)) {
           showFilterResult = false;
         }
+        console.log("showFilterResult:", showFilterResult);
         if (!showFilterResult) {
-          showAtList.value = false;
+          atListVisible.value = false;
           return;
         }
-        console.log("inputChunk:", inputChunk);
+        if (inputChunk) {
+          ctx.emit("at", inputChunk);
+        }
+        const matchedList = !inputChunk
+          ? [...props.list]
+          : props.list.filter((item) =>
+              props.filtersFn(item, inputChunk, props.keyName)
+            );
+        console.log("matchedList:", matchedList);
+        if (matchedList.length > 0) {
+          atListVisible.value = true;
+          matchedAtList.value = [...matchedList];
+        } else {
+          atListVisible.value = false;
+        }
       },
     };
   },
@@ -88,19 +197,7 @@ export default defineComponent({
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 .at-wrapper {
   position: relative;
-}
-.at-list {
-  top: 100%;
-  position: absolute;
 }
 </style>

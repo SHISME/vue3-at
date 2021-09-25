@@ -14,3 +14,21 @@ export function getCurRangeClone(): Range | undefined {
     return range;
   }
 }
+
+export function applyRange(range: Range): void {
+  const selection = window.getSelection();
+  if (!selection) return;
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+export function isTextNode(el: any): el is Text {
+  return el.nodeType === Node.TEXT_NODE;
+}
+
+export enum KeyCode {
+  up = 38,
+  down = 40,
+  enter = 13,
+  esc = 27,
+}
