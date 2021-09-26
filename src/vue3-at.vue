@@ -15,7 +15,7 @@
     >
       666
     </AtList>
-    <span ref="customItem" v-show="false">
+    <span v-if="matchedAtList[curIndex]" ref="customItem" v-show="false">
       <slot name="customItem" :item="matchedAtList[curIndex]"></slot>
     </span>
   </div>
@@ -23,7 +23,13 @@
 
 <script lang="ts">
 import { defineComponent, PropType, ref } from "vue";
-import { getCurRangeClone, applyRange, KeyCode, isTextNode } from "./util";
+import {
+  getCurRangeClone,
+  applyRange,
+  KeyCode,
+  isTextNode,
+  htmlToElement,
+} from "./util";
 import AtList from "./at-list.vue";
 
 export default defineComponent({
@@ -91,7 +97,17 @@ export default defineComponent({
       range.collapse(false);
       applyRange(range);
     };
-    const insertCustomHtmlToContent = (text: string, range: Range) => {};
+    const insertCustomHtmlToContent = (html: string, range: Range) => {
+      range.deleteContents();
+      const insertedElement = document.createElement("span");
+      insertedElement.appendChild(htmlToElement(html));
+      insertedElement.appendChild(document.createTextNode(""));
+      insertedElement.setAttribute("contenteditable", "false");
+      range.insertNode(insertedElement);
+      range.setEndAfter(insertedElement);
+      range.collapse(false);
+      applyRange(range);
+    };
     const inertCurItemToContent = () => {
       if (!lastInputRange) return;
       const rangeClone = lastInputRange.cloneRange();
@@ -102,7 +118,9 @@ export default defineComponent({
       applyRange(rangeClone);
       if (ctx.slots.customItem) {
         const customHtml = customItem.value?.innerHTML;
-        console.log("customHtml:", customHtml);
+        if (customHtml) {
+          insertCustomHtmlToContent(customHtml, rangeClone);
+        }
       } else {
         const itemText = matchedAtList.value[curIndex.value][props.keyName];
         insertTextToContent(props.at + itemText, rangeClone);
@@ -161,6 +179,7 @@ export default defineComponent({
         if (isInComposition) return;
         const curRangeClone = getCurRangeClone();
         if (!curRangeClone) return;
+        console.log("curRangeClone:", curRangeClone.endContainer);
         lastInputRange = curRangeClone.cloneRange();
         const text = curRangeClone.toString();
         const lastAtIndex = text.lastIndexOf(props.at);

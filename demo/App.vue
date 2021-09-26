@@ -2,8 +2,8 @@
   <div>1122</div>
   <vue3-at :list="list" keyName="name">
     <div class="editor" contenteditable></div>
-    <template v-slot:customItem="s">
-      <span style="color: red">{{ s }}</span>
+    <template v-slot:customItem="{ item }">
+      <span style="color: red">@{{ item.name }}</span>
     </template>
   </vue3-at>
 </template>

@@ -22,6 +22,12 @@ export function applyRange(range: Range): void {
   selection.addRange(range);
 }
 
+export function htmlToElement(html: string): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = html.trim();
+  return wrapper.firstChild as HTMLElement;
+}
+
 export function isTextNode(el: any): el is Text {
   return el.nodeType === Node.TEXT_NODE;
 }
