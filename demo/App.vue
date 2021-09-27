@@ -1,6 +1,6 @@
 <template>
   <div>1122</div>
-  <vue3-at :list="list" keyName="name">
+  <vue3-at :list="list" keyName="name" @at="onAt">
     <div class="editor" contenteditable></div>
     <template v-slot:customItem="{ item }">
       <span style="color: red">@{{ item.name }}</span>
@@ -46,6 +46,9 @@ export default defineComponent({
     ]);
     return {
       list,
+      onAt(chunk: string) {
+        console.log("onAt:", chunk);
+      },
     };
   },
 });

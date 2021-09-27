@@ -10,7 +10,7 @@
     <AtList
       v-if="atListVisible"
       :list="matchedAtList"
-      :curIndex="curIndex"
+      v-model:curIndex="curIndex"
       class="at-list"
     >
       666
@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref } from "vue";
+import { defineComponent, PropType, ref, onMounted } from "vue";
 import {
   getCurRangeClone,
   applyRange,
@@ -73,6 +73,9 @@ export default defineComponent({
   },
   emits: ["at"],
   setup(props, ctx) {
+    onMounted(() => {
+      console.log("ctx:", ctx);
+    });
     const customItem = ref<HTMLElement>();
     const atListVisible = ref(false);
     const curIndex = ref(1);
@@ -125,7 +128,6 @@ export default defineComponent({
         const itemText = matchedAtList.value[curIndex.value][props.keyName];
         insertTextToContent(props.at + itemText, rangeClone);
       }
-      atListVisible.value = false;
     };
 
     const onPressUpOrDown = (keyCode: number) => {
@@ -164,6 +166,7 @@ export default defineComponent({
         if (!atListVisible.value) return;
         if (e.keyCode === KeyCode.enter) {
           inertCurItemToContent();
+          atListVisible.value = false;
           e.preventDefault();
           e.stopPropagation();
           return;
@@ -179,11 +182,13 @@ export default defineComponent({
         if (isInComposition) return;
         const curRangeClone = getCurRangeClone();
         if (!curRangeClone) return;
-        console.log("curRangeClone:", curRangeClone.endContainer);
         lastInputRange = curRangeClone.cloneRange();
         const text = curRangeClone.toString();
         const lastAtIndex = text.lastIndexOf(props.at);
-        if (lastAtIndex === -1) return;
+        if (lastAtIndex === -1) {
+          atListVisible.value = false;
+          return;
+        }
         const inputChunk = text.slice(lastAtIndex + props.at.length);
         let showFilterResult = true;
         if (!props.allowSpaces && /\s/.test(inputChunk)) {
@@ -194,9 +199,7 @@ export default defineComponent({
           atListVisible.value = false;
           return;
         }
-        if (inputChunk) {
-          ctx.emit("at", inputChunk);
-        }
+        ctx.emit("at", inputChunk);
         const matchedList = !inputChunk
           ? [...props.list]
           : props.list.filter((item) =>
@@ -218,5 +221,6 @@ export default defineComponent({
 <style>
 .at-wrapper {
   position: relative;
+  display: inline-block;
 }
 </style>
