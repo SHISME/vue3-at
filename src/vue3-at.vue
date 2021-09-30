@@ -15,9 +15,6 @@
     >
       666
     </AtList>
-    <span v-if="matchedAtList[curIndex]" ref="customItem" v-show="false">
-      <slot name="customItem" :item="matchedAtList[curIndex]"></slot>
-    </span>
   </div>
 </template>
 
@@ -41,6 +38,10 @@ export default defineComponent({
     at: {
       type: String,
       default: "@",
+    },
+    renderInsertItem: {
+      type: Function,
+      required: false,
     },
     list: {
       type: Array,
@@ -74,9 +75,10 @@ export default defineComponent({
   emits: ["at"],
   setup(props, ctx) {
     onMounted(() => {
-      console.log("ctx:", ctx);
+      if (ctx.slots.default) {
+        console.log("ctx:", ctx.slots.default()[0].el);
+      }
     });
-    const customItem = ref<HTMLElement>();
     const atListVisible = ref(false);
     const curIndex = ref(1);
     let isInComposition = false;
@@ -102,8 +104,7 @@ export default defineComponent({
     };
     const insertCustomHtmlToContent = (html: string, range: Range) => {
       range.deleteContents();
-      const insertedElement = document.createElement("span");
-      insertedElement.appendChild(htmlToElement(html));
+      const insertedElement = htmlToElement(html);
       insertedElement.appendChild(document.createTextNode(""));
       insertedElement.setAttribute("contenteditable", "false");
       range.insertNode(insertedElement);
@@ -111,7 +112,16 @@ export default defineComponent({
       range.collapse(false);
       applyRange(range);
     };
-    const inertCurItemToContent = () => {
+    // const insertItemToContent = (item: any, range?: Range) => {
+    //   let cloneRange: Range;
+    //   if (range) {
+    //     cloneRange = range.cloneRange();
+    //   } else {
+    //     cloneRange = document.createRange();
+    //     cloneRange.setEnd()
+    //   }
+    // };
+    const inertItemToContent = (insertedItem: any) => {
       if (!lastInputRange) return;
       const rangeClone = lastInputRange.cloneRange();
       const text = rangeClone.toString();
@@ -119,13 +129,13 @@ export default defineComponent({
       if (lastAtIndex === -1) return;
       rangeClone.setStart(rangeClone.endContainer, lastAtIndex);
       applyRange(rangeClone);
-      if (ctx.slots.customItem) {
-        const customHtml = customItem.value?.innerHTML;
+      if (props.renderInsertItem) {
+        const customHtml = props.renderInsertItem(insertedItem);
         if (customHtml) {
           insertCustomHtmlToContent(customHtml, rangeClone);
         }
       } else {
-        const itemText = matchedAtList.value[curIndex.value][props.keyName];
+        const itemText = insertedItem[props.keyName];
         insertTextToContent(props.at + itemText, rangeClone);
       }
     };
@@ -151,7 +161,6 @@ export default defineComponent({
       curIndex.value = nextIndex;
     };
     return {
-      customItem,
       atListVisible,
       matchedAtList,
       curIndex,
@@ -165,7 +174,9 @@ export default defineComponent({
       onKeyDown(e: KeyboardEvent) {
         if (!atListVisible.value) return;
         if (e.keyCode === KeyCode.enter) {
-          inertCurItemToContent();
+          if (matchedAtList.value[curIndex.value]) {
+            inertItemToContent(matchedAtList.value[curIndex.value]);
+          }
           atListVisible.value = false;
           e.preventDefault();
           e.stopPropagation();

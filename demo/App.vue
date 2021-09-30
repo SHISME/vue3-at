@@ -1,10 +1,12 @@
 <template>
   <div>1122</div>
-  <vue3-at :list="list" keyName="name" @at="onAt">
+  <vue3-at
+    :list="list"
+    keyName="name"
+    @at="onAt"
+    :renderInsertItem="renderInsertItem"
+  >
     <div class="editor" contenteditable></div>
-    <template v-slot:customItem="{ item }">
-      <span style="color: red">@{{ item.name }}</span>
-    </template>
   </vue3-at>
 </template>
 
@@ -49,6 +51,9 @@ export default defineComponent({
       onAt(chunk: string) {
         console.log("onAt:", chunk);
       },
+      renderInsertItem(row: { name: string; userId: string }): string {
+        return `<span style="color:red;" data-user-id="${row.userId}">@${row.name}</span>`;
+      },
     };
   },
 });
@@ -68,6 +73,7 @@ export default defineComponent({
   height: 200px;
   overflow: auto;
   white-space: pre-wrap;
+  text-align: left;
   border: solid 2px rgba(0, 0, 0, 0.5);
 }
 </style>
