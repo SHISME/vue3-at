@@ -32,6 +32,22 @@ export function isTextNode(el: any): el is Text {
   return el.nodeType === Node.TEXT_NODE;
 }
 
+/**
+ */
+export function getRangeTagContainer(range: Range): HTMLElement | false {
+  const parentElement = range.endContainer.parentElement;
+  if (!parentElement) return false;
+  if (parentElement.getAttribute("is-tag")) {
+    return parentElement;
+  }
+  const granParentElement = parentElement.parentElement;
+  if (!granParentElement) return false;
+  if (granParentElement.getAttribute("is-tag")) {
+    return granParentElement;
+  }
+  return false;
+}
+
 export enum KeyCode {
   up = 38,
   down = 40,

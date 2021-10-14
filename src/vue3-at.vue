@@ -19,13 +19,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, onMounted } from "vue";
+import { defineComponent, PropType, ref } from "vue";
 import {
   getCurRangeClone,
   applyRange,
   KeyCode,
   isTextNode,
-  htmlToElement,
+  getRangeTagContainer,
 } from "./util";
 import AtList from "./at-list.vue";
 
@@ -74,11 +74,6 @@ export default defineComponent({
   },
   emits: ["at"],
   setup(props, ctx) {
-    onMounted(() => {
-      if (ctx.slots.default) {
-        console.log("ctx:", ctx.slots.default()[0].el);
-      }
-    });
     const atListVisible = ref(false);
     const curIndex = ref(1);
     let isInComposition = false;
@@ -104,13 +99,11 @@ export default defineComponent({
     };
     const insertCustomHtmlToContent = (html: string, range: Range) => {
       range.deleteContents();
-      const insertedElement = htmlToElement(html);
-      insertedElement.appendChild(document.createTextNode(""));
-      insertedElement.setAttribute("contenteditable", "false");
-      range.insertNode(insertedElement);
-      range.setEndAfter(insertedElement);
-      range.collapse(false);
-      applyRange(range);
+      document.execCommand(
+        "insertHTML",
+        false,
+        `<span is-tag="true">${html}</span>\u00A0`
+      );
     };
     // const insertItemToContent = (item: any, range?: Range) => {
     //   let cloneRange: Range;
@@ -169,7 +162,6 @@ export default defineComponent({
       },
       onCompositionEnd() {
         isInComposition = false;
-        console.log("handleCompositionEnd");
       },
       onKeyDown(e: KeyboardEvent) {
         if (!atListVisible.value) return;
@@ -193,6 +185,16 @@ export default defineComponent({
         if (isInComposition) return;
         const curRangeClone = getCurRangeClone();
         if (!curRangeClone) return;
+        const tagContainer = getRangeTagContainer(curRangeClone);
+        if (tagContainer) {
+          const selection = document.getSelection();
+          if (selection) {
+            selection.selectAllChildren(tagContainer);
+            document.execCommand("insertText", false, tagContainer.innerText);
+          }
+          console.log("curRangeClone:", tagContainer);
+          return;
+        }
         lastInputRange = curRangeClone.cloneRange();
         const text = curRangeClone.toString();
         const lastAtIndex = text.lastIndexOf(props.at);
