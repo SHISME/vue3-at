@@ -53,4 +53,7 @@ export enum KeyCode {
   down = 40,
   enter = 13,
   esc = 27,
+  left = 37,
+  right = 39,
+  delete = 8,
 }

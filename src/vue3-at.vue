@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref } from "vue";
+import { defineComponent, PropType, ref, computed } from "vue";
 import {
   getCurRangeClone,
   applyRange,
@@ -39,9 +39,17 @@ export default defineComponent({
       type: String,
       default: "@",
     },
+    atMap: {
+      type: Object,
+      default: () => ({}),
+    },
     renderInsertItem: {
       type: Function,
       required: false,
+    },
+    disabledModifyTag: {
+      type: Boolean,
+      default: true,
     },
     list: {
       type: Array,
@@ -64,7 +72,6 @@ export default defineComponent({
         (item: any, chunk: string, keyName?: string) => boolean
       >,
       default: (item: any, chunk: string, keyName?: string) => {
-        console.log("item:", chunk);
         if (!keyName || item.isSubjectTitle) {
           return true;
         }
@@ -75,6 +82,9 @@ export default defineComponent({
   emits: ["at"],
   setup(props, ctx) {
     const atListVisible = ref(false);
+    const atChats = computed(() => {
+      return Object.keys(props.atMap);
+    });
     const curIndex = ref(1);
     let isInComposition = false;
     const matchedAtList = ref<any[]>([]);
@@ -97,23 +107,13 @@ export default defineComponent({
       range.collapse(false);
       applyRange(range);
     };
-    const insertCustomHtmlToContent = (html: string, range: Range) => {
-      range.deleteContents();
+    const insertCustomHtmlToContent = (html: string) => {
       document.execCommand(
         "insertHTML",
         false,
         `<span is-tag="true">${html}</span>\u00A0`
       );
     };
-    // const insertItemToContent = (item: any, range?: Range) => {
-    //   let cloneRange: Range;
-    //   if (range) {
-    //     cloneRange = range.cloneRange();
-    //   } else {
-    //     cloneRange = document.createRange();
-    //     cloneRange.setEnd()
-    //   }
-    // };
     const inertItemToContent = (insertedItem: any) => {
       if (!lastInputRange) return;
       const rangeClone = lastInputRange.cloneRange();
@@ -125,7 +125,7 @@ export default defineComponent({
       if (props.renderInsertItem) {
         const customHtml = props.renderInsertItem(insertedItem);
         if (customHtml) {
-          insertCustomHtmlToContent(customHtml, rangeClone);
+          insertCustomHtmlToContent(customHtml);
         }
       } else {
         const itemText = insertedItem[props.keyName];
@@ -164,6 +164,54 @@ export default defineComponent({
         isInComposition = false;
       },
       onKeyDown(e: KeyboardEvent) {
+        if (e.isComposing) return;
+        const resetRangeIfNeed = () => {
+          if (!props.disabledModifyTag) return;
+          const curRangeClone = getCurRangeClone();
+          if (!curRangeClone) return;
+          if (
+            !(
+              e.key.length <= 1 ||
+              e.keyCode === KeyCode.enter ||
+              e.keyCode === KeyCode.delete
+            )
+          )
+            return;
+          const tagContainer = getRangeTagContainer(curRangeClone);
+          if (!tagContainer) return;
+          const selection = document.getSelection();
+          if (!selection) return;
+          if (e.keyCode === KeyCode.delete) {
+            if (curRangeClone.endOffset === 0) return;
+            // 把整个tag删除
+            curRangeClone.selectNode(tagContainer);
+            selection.removeAllRanges();
+            selection.addRange(curRangeClone);
+            document.execCommand("delete");
+            return;
+          }
+          // 输入的时候，
+          // 如果光标在tag的前面，需要先插入一个空格才不会导致输入的内容在tag里面
+          // 如果光标在tag里或后，则在tag后插入一个空格
+          const emptyNode = document.createTextNode(" ");
+          if (curRangeClone.endOffset === 0) {
+            tagContainer.parentElement &&
+              tagContainer.parentElement.insertBefore(emptyNode, tagContainer);
+          } else {
+            if (tagContainer.nextSibling) {
+              tagContainer.parentElement!.insertBefore(
+                emptyNode,
+                tagContainer.nextSibling
+              );
+            } else {
+              tagContainer.parentElement!.append(emptyNode);
+            }
+            curRangeClone.setStart(emptyNode, 1);
+            selection.removeAllRanges();
+            selection.addRange(curRangeClone);
+          }
+        };
+        resetRangeIfNeed();
         if (!atListVisible.value) return;
         if (e.keyCode === KeyCode.enter) {
           if (matchedAtList.value[curIndex.value]) {
@@ -187,12 +235,6 @@ export default defineComponent({
         if (!curRangeClone) return;
         const tagContainer = getRangeTagContainer(curRangeClone);
         if (tagContainer) {
-          const selection = document.getSelection();
-          if (selection) {
-            selection.selectAllChildren(tagContainer);
-            document.execCommand("insertText", false, tagContainer.innerText);
-          }
-          console.log("curRangeClone:", tagContainer);
           return;
         }
         lastInputRange = curRangeClone.cloneRange();
@@ -207,7 +249,6 @@ export default defineComponent({
         if (!props.allowSpaces && /\s/.test(inputChunk)) {
           showFilterResult = false;
         }
-        console.log("showFilterResult:", showFilterResult);
         if (!showFilterResult) {
           atListVisible.value = false;
           return;
@@ -218,7 +259,6 @@ export default defineComponent({
           : props.list.filter((item) =>
               props.filtersFn(item, inputChunk, props.keyName)
             );
-        console.log("matchedList:", matchedList);
         if (matchedList.length > 0) {
           atListVisible.value = true;
           matchedAtList.value = [...matchedList];

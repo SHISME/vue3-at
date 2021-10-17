@@ -2,6 +2,7 @@
   <div>1122</div>
   <vue3-at
     :list="list"
+    :atMap="atMap"
     keyName="name"
     @at="onAt"
     :renderInsertItem="renderInsertItem"
@@ -46,8 +47,37 @@ export default defineComponent({
         userId: "",
       },
     ]);
+    const atMap = ref({
+      "@": [
+        {
+          isSubjectTitle: true,
+          title: "最近联系人",
+        },
+        {
+          name: "sh",
+          userId: "",
+        },
+        {
+          name: "sh2",
+          userId: "",
+        },
+        {
+          isSubjectTitle: true,
+          title: "好友",
+        },
+        {
+          name: "sh",
+          userId: "",
+        },
+        {
+          name: "sh2",
+          userId: "",
+        },
+      ],
+    });
     return {
       list,
+      atMap,
       onAt(chunk: string) {
         console.log("onAt:", chunk);
       },
