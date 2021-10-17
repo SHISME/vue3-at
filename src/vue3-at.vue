@@ -13,7 +13,9 @@
       v-model:curIndex="curIndex"
       class="at-list"
     >
-      666
+      <template v-slot:default="{ item, index }">
+        <slot name="listItem" v-bind:item="item" v-bind:index="index"></slot>
+      </template>
     </AtList>
   </div>
 </template>
@@ -35,12 +37,8 @@ export default defineComponent({
     AtList,
   },
   props: {
-    at: {
-      type: String,
-      default: "@",
-    },
     atMap: {
-      type: Object,
+      type: Object as PropType<{ [at: string]: any[] }>,
       default: () => ({}),
     },
     renderInsertItem: {
@@ -50,10 +48,6 @@ export default defineComponent({
     disabledModifyTag: {
       type: Boolean,
       default: true,
-    },
-    list: {
-      type: Array,
-      default: () => [],
     },
     keyName: {
       type: String,
@@ -85,6 +79,25 @@ export default defineComponent({
     const atChats = computed(() => {
       return Object.keys(props.atMap);
     });
+    const getAtIndex = (
+      text: string
+    ):
+      | {
+          at: string;
+          index: number;
+        }
+      | false => {
+      for (let i = 0; i < atChats.value.length; i++) {
+        const index = text.indexOf(atChats.value[i]);
+        if (index !== -1) {
+          return {
+            at: atChats.value[i],
+            index,
+          };
+        }
+      }
+      return false;
+    };
     const curIndex = ref(1);
     let isInComposition = false;
     const matchedAtList = ref<any[]>([]);
@@ -114,13 +127,13 @@ export default defineComponent({
         `<span is-tag="true">${html}</span>\u00A0`
       );
     };
+    let curAt = "";
+    let curAtIndex = -1;
     const inertItemToContent = (insertedItem: any) => {
       if (!lastInputRange) return;
       const rangeClone = lastInputRange.cloneRange();
-      const text = rangeClone.toString();
-      const lastAtIndex = text.lastIndexOf(props.at);
-      if (lastAtIndex === -1) return;
-      rangeClone.setStart(rangeClone.endContainer, lastAtIndex);
+      if (curAtIndex === -1) return;
+      rangeClone.setStart(rangeClone.endContainer, curAtIndex);
       applyRange(rangeClone);
       if (props.renderInsertItem) {
         const customHtml = props.renderInsertItem(insertedItem);
@@ -129,7 +142,7 @@ export default defineComponent({
         }
       } else {
         const itemText = insertedItem[props.keyName];
-        insertTextToContent(props.at + itemText, rangeClone);
+        insertTextToContent(curAt + itemText, rangeClone);
       }
     };
 
@@ -239,12 +252,14 @@ export default defineComponent({
         }
         lastInputRange = curRangeClone.cloneRange();
         const text = curRangeClone.toString();
-        const lastAtIndex = text.lastIndexOf(props.at);
-        if (lastAtIndex === -1) {
+        const atIndex = getAtIndex(text);
+        if (!atIndex) {
           atListVisible.value = false;
           return;
         }
-        const inputChunk = text.slice(lastAtIndex + props.at.length);
+        curAtIndex = atIndex.index;
+        curAt = atIndex.at;
+        const inputChunk = text.slice(curAtIndex + curAt.length);
         let showFilterResult = true;
         if (!props.allowSpaces && /\s/.test(inputChunk)) {
           showFilterResult = false;
@@ -255,8 +270,8 @@ export default defineComponent({
         }
         ctx.emit("at", inputChunk);
         const matchedList = !inputChunk
-          ? [...props.list]
-          : props.list.filter((item) =>
+          ? [...props.atMap[curAt]]
+          : props.atMap[curAt].filter((item) =>
               props.filtersFn(item, inputChunk, props.keyName)
             );
         if (matchedList.length > 0) {

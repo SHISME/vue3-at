@@ -1,13 +1,17 @@
 <template>
-  <div>1122</div>
   <vue3-at
-    :list="list"
     :atMap="atMap"
     keyName="name"
     @at="onAt"
     :renderInsertItem="renderInsertItem"
   >
     <div class="editor" contenteditable></div>
+    <template v-slot:listItem="{ item }">
+      <div v-if="item.isSubjectTitle">{{ item.title }}</div>
+      <div class="list-item" v-else>
+        <img :src="item.avatar" alt="" />{{ item.name }}
+      </div>
+    </template>
   </vue3-at>
 </template>
 
@@ -21,32 +25,6 @@ export default defineComponent({
     Vue3At,
   },
   setup() {
-    const list = ref([
-      {
-        isSubjectTitle: true,
-        title: "最近联系人",
-      },
-      {
-        name: "sh",
-        userId: "",
-      },
-      {
-        name: "sh2",
-        userId: "",
-      },
-      {
-        isSubjectTitle: true,
-        title: "好友",
-      },
-      {
-        name: "sh",
-        userId: "",
-      },
-      {
-        name: "sh2",
-        userId: "",
-      },
-    ]);
     const atMap = ref({
       "@": [
         {
@@ -54,35 +32,44 @@ export default defineComponent({
           title: "最近联系人",
         },
         {
-          name: "sh",
+          name: "SHISME",
           userId: "",
+          avatar: "https://avatars.githubusercontent.com/u/17661313?s=40&v=4",
         },
         {
-          name: "sh2",
+          name: "CAYAHUANG",
           userId: "",
+          avatar: "https://avatars.githubusercontent.com/u/18247969?s=100&v=4",
         },
         {
           isSubjectTitle: true,
           title: "好友",
         },
         {
-          name: "sh",
+          name: "OuYang",
           userId: "",
+          avatar: "https://avatars.githubusercontent.com/u/13029538?s=100&v=4",
         },
         {
-          name: "sh2",
+          name: "SAGA",
+          avatar: "https://avatars.githubusercontent.com/u/16740021?s=100&v=4",
+          userId: "",
+        },
+      ],
+      "#": [
+        {
+          name: "666",
           userId: "",
         },
       ],
     });
     return {
-      list,
       atMap,
       onAt(chunk: string) {
         console.log("onAt:", chunk);
       },
       renderInsertItem(row: { name: string; userId: string }): string {
-        return `<span style="color:red;" data-user-id="${row.userId}">@${row.name}</span>`;
+        return `<span style="color:#003569;" data-user-id="${row.userId}">@${row.name}</span>`;
       },
     };
   },
@@ -105,5 +92,16 @@ export default defineComponent({
   white-space: pre-wrap;
   text-align: left;
   border: solid 2px rgba(0, 0, 0, 0.5);
+}
+.list-item {
+  text-align: left;
+  height: 50px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.list-item > img {
+  width: 40px;
+  margin: 0 24px;
 }
 </style>

@@ -9,10 +9,22 @@
         }"
         @mouseenter="onMouseEnter(index)"
       >
-        {{ item }}
+        <slot
+          v-bind:item="item"
+          v-bind:index="index"
+          v-bind:curIndex="curIndex"
+        >
+          {{ item }}
+        </slot>
       </div>
       <div v-else class="at-list__subject-title">
-        {{ item.title }}
+        <slot
+          v-bind:item="item"
+          v-bind:index="index"
+          v-bind:curIndex="curIndex"
+        >
+          {{ item.title }}
+        </slot>
       </div>
     </template>
   </div>
