@@ -1,1 +1,1 @@
-![demo1](./demo/demo1.jpg)
+<img src="./demo/demo1.jpg" width="400" />
