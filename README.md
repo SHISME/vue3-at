@@ -7,11 +7,15 @@
 ## Usage
 
 ```vue
+
 <template>
   <vue3-at :atMap="atMap" @at="onAt" :renderTagItem="renderTagItem">
     <div class="editor" contenteditable></div>
     <template v-slot:listItem="{ item }">
       <div v-if="item.isSubjectTitle">{{ item.title }}</div>
+      <div class="list-item" v-else-if="item.tag">
+        {{ item.tag }}
+      </div>
       <div class="list-item" v-else>
         <img :src="item.avatar" alt="" />{{ item.name }}
       </div>
@@ -21,7 +25,7 @@
 
 <script lang="ts">
 import { defineComponent, ref } from "vue";
-import { Vue3At } from "vue3-at";
+import { Vue3At } from "../src/";
 
 export default defineComponent({
   name: "App",
@@ -80,7 +84,12 @@ export default defineComponent({
       onAt(chunk: string) {
         console.log("onAt:", chunk);
       },
-      renderTagItem(row: { name: string; userId: string }): string {
+      renderTagItem(
+        row: { name: string; userId: string } | { tag: string }
+      ): string {
+        if (row.tag) {
+          return `<span style="color: deepskyblue">${row.tag}</span>`;
+        }
         return `<span style="color:#003569;" data-user-id="${row.userId}">@${row.name}</span>`;
       },
     };
@@ -97,7 +106,8 @@ export default defineComponent({
 interface IVue3AtProps {
   /**
    * required
-   * key is 'at' character which when you input it will show the list,keyName is the property name of the list's item.
+   * key is 'at' character which when you input it will show the list,
+   * keyName is the property name of the list's item.
    */
   atMap:{ [at: string]: {list: any[];keyName: string;[]} };
   
@@ -142,3 +152,23 @@ interface IVue3AtProps {
 }
 
 ```
+
+## events
+
+### at
+
+parameter: `{at: string; inputChunk:string}` 
+
+when at will be input
+
+### insert-tag
+
+parameter is the item which will be inserted
+
+### click-list-item
+
+parameter is the item which had be clicked in list.
+
+### input
+
+no parameter.

@@ -7,6 +7,7 @@
         :class="{
           'at-list__item--active': index === curIndex,
         }"
+        @click="$emit('click-item', item)"
         @mouseenter="onMouseEnter(index)"
       >
         <slot
@@ -34,7 +35,7 @@ import { defineComponent } from "vue";
 
 export default defineComponent({
   name: "AtList",
-  emits: ["update:curIndex"],
+  emits: ["update:curIndex", "click-item"],
   props: {
     showSubjectTitle: {
       type: Boolean,

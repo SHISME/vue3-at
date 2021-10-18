@@ -3,6 +3,9 @@
     <div class="editor" contenteditable></div>
     <template v-slot:listItem="{ item }">
       <div v-if="item.isSubjectTitle">{{ item.title }}</div>
+      <div class="list-item" v-else-if="item.tag">
+        {{ item.tag }}
+      </div>
       <div class="list-item" v-else>
         <img :src="item.avatar" alt="" />{{ item.name }}
       </div>
@@ -71,7 +74,12 @@ export default defineComponent({
       onAt(chunk: string) {
         console.log("onAt:", chunk);
       },
-      renderTagItem(row: { name: string; userId: string }): string {
+      renderTagItem(
+        row: { name: string; userId: string } | { tag: string }
+      ): string {
+        if (row.tag) {
+          return `<span style="color: deepskyblue">${row.tag}</span>`;
+        }
         return `<span style="color:#003569;" data-user-id="${row.userId}">@${row.name}</span>`;
       },
     };

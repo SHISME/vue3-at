@@ -12,6 +12,7 @@
       :list="matchedAtList"
       v-model:curIndex="curIndex"
       class="at-list"
+      @click-item="onClickItem"
     >
       <template v-slot:default="{ item, index }">
         <slot name="listItem" v-bind:item="item" v-bind:index="index"></slot>
@@ -21,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, computed } from "vue";
+import { defineComponent, PropType, ref, computed, watch } from "vue";
 import {
   getCurRangeClone,
   applyRange,
@@ -74,7 +75,7 @@ export default defineComponent({
       },
     },
   },
-  emits: ["at"],
+  emits: ["at", "insert-tag", "click-list-item", "input"],
   setup(props, ctx) {
     const atListVisible = ref(false);
     const atChats = computed(() => {
@@ -145,6 +146,7 @@ export default defineComponent({
         const itemText = insertedItem[props.atMap[curAt].keyName];
         insertTextToContent(curAt + itemText, rangeClone);
       }
+      ctx.emit("insert-tag", insertedItem);
     };
 
     const onPressUpOrDown = (keyCode: number) => {
@@ -167,6 +169,23 @@ export default defineComponent({
       }
       curIndex.value = nextIndex;
     };
+    let curInputChunk = "";
+    const filterList = () => {
+      const matchedList = !curInputChunk
+        ? [...props.atMap[curAt].list]
+        : props.atMap[curAt].list.filter((item) =>
+            props.filtersFn(item, curInputChunk, props.atMap[curAt].keyName)
+          );
+      if (matchedList.length > 0) {
+        atListVisible.value = true;
+        matchedAtList.value = [...matchedList];
+      } else {
+        atListVisible.value = false;
+      }
+    };
+    watch(props.atMap, () => {
+      filterList();
+    });
     return {
       atListVisible,
       matchedAtList,
@@ -244,6 +263,7 @@ export default defineComponent({
         }
       },
       onInput() {
+        ctx.emit("input");
         if (isInComposition) return;
         const curRangeClone = getCurRangeClone();
         if (!curRangeClone) return;
@@ -260,27 +280,20 @@ export default defineComponent({
         }
         curAtIndex = atIndex.index;
         curAt = atIndex.at;
-        const inputChunk = text.slice(curAtIndex + curAt.length);
-        let showFilterResult = true;
-        if (!props.allowSpaces && /\s/.test(inputChunk)) {
-          showFilterResult = false;
-        }
-        if (!showFilterResult) {
+        curInputChunk = text.slice(curAtIndex + curAt.length);
+        if (!props.allowSpaces && /\s/.test(curInputChunk)) {
           atListVisible.value = false;
           return;
         }
-        ctx.emit("at", inputChunk);
-        const matchedList = !inputChunk
-          ? [...props.atMap[curAt].list]
-          : props.atMap[curAt].list.filter((item) =>
-              props.filtersFn(item, inputChunk, props.atMap[curAt].keyName)
-            );
-        if (matchedList.length > 0) {
-          atListVisible.value = true;
-          matchedAtList.value = [...matchedList];
-        } else {
-          atListVisible.value = false;
-        }
+        ctx.emit("at", {
+          at: curAt,
+          curInputChunk,
+        });
+        filterList();
+      },
+      onClickItem(item: any) {
+        ctx.emit("click-list-item", item);
+        inertItemToContent(item);
       },
     };
   },
