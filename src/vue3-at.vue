@@ -38,20 +38,21 @@ export default defineComponent({
   },
   props: {
     atMap: {
-      type: Object as PropType<{ [at: string]: any[] }>,
+      type: Object as PropType<{
+        [at: string]: {
+          list: any[];
+          keyName: string;
+        };
+      }>,
       default: () => ({}),
     },
-    renderInsertItem: {
+    renderTagItem: {
       type: Function,
       required: false,
     },
     disabledModifyTag: {
       type: Boolean,
       default: true,
-    },
-    keyName: {
-      type: String,
-      default: "",
     },
     showSubjectTitle: {
       type: Boolean,
@@ -135,13 +136,13 @@ export default defineComponent({
       if (curAtIndex === -1) return;
       rangeClone.setStart(rangeClone.endContainer, curAtIndex);
       applyRange(rangeClone);
-      if (props.renderInsertItem) {
-        const customHtml = props.renderInsertItem(insertedItem);
+      if (props.renderTagItem) {
+        const customHtml = props.renderTagItem(insertedItem);
         if (customHtml) {
           insertCustomHtmlToContent(customHtml);
         }
       } else {
-        const itemText = insertedItem[props.keyName];
+        const itemText = insertedItem[props.atMap[curAt].keyName];
         insertTextToContent(curAt + itemText, rangeClone);
       }
     };
@@ -270,9 +271,9 @@ export default defineComponent({
         }
         ctx.emit("at", inputChunk);
         const matchedList = !inputChunk
-          ? [...props.atMap[curAt]]
-          : props.atMap[curAt].filter((item) =>
-              props.filtersFn(item, inputChunk, props.keyName)
+          ? [...props.atMap[curAt].list]
+          : props.atMap[curAt].list.filter((item) =>
+              props.filtersFn(item, inputChunk, props.atMap[curAt].keyName)
             );
         if (matchedList.length > 0) {
           atListVisible.value = true;

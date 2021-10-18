@@ -1,10 +1,5 @@
 <template>
-  <vue3-at
-    :atMap="atMap"
-    keyName="name"
-    @at="onAt"
-    :renderInsertItem="renderInsertItem"
-  >
+  <vue3-at :atMap="atMap" @at="onAt" :renderTagItem="renderTagItem">
     <div class="editor" contenteditable></div>
     <template v-slot:listItem="{ item }">
       <div v-if="item.isSubjectTitle">{{ item.title }}</div>
@@ -26,49 +21,57 @@ export default defineComponent({
   },
   setup() {
     const atMap = ref({
-      "@": [
-        {
-          isSubjectTitle: true,
-          title: "最近联系人",
-        },
-        {
-          name: "SHISME",
-          userId: "",
-          avatar: "https://avatars.githubusercontent.com/u/17661313?s=40&v=4",
-        },
-        {
-          name: "CAYAHUANG",
-          userId: "",
-          avatar: "https://avatars.githubusercontent.com/u/18247969?s=100&v=4",
-        },
-        {
-          isSubjectTitle: true,
-          title: "好友",
-        },
-        {
-          name: "OuYang",
-          userId: "",
-          avatar: "https://avatars.githubusercontent.com/u/13029538?s=100&v=4",
-        },
-        {
-          name: "SAGA",
-          avatar: "https://avatars.githubusercontent.com/u/16740021?s=100&v=4",
-          userId: "",
-        },
-      ],
-      "#": [
-        {
-          name: "666",
-          userId: "",
-        },
-      ],
+      "@": {
+        keyName: "name",
+        list: [
+          {
+            isSubjectTitle: true,
+            title: "最近联系人",
+          },
+          {
+            name: "SHISME",
+            userId: "",
+            avatar: "https://avatars.githubusercontent.com/u/17661313?s=40&v=4",
+          },
+          {
+            name: "CAYAHUANG",
+            userId: "",
+            avatar:
+              "https://avatars.githubusercontent.com/u/18247969?s=100&v=4",
+          },
+          {
+            isSubjectTitle: true,
+            title: "好友",
+          },
+          {
+            name: "OuYang",
+            userId: "",
+            avatar:
+              "https://avatars.githubusercontent.com/u/13029538?s=100&v=4",
+          },
+          {
+            name: "SAGA",
+            avatar:
+              "https://avatars.githubusercontent.com/u/16740021?s=100&v=4",
+            userId: "",
+          },
+        ],
+      },
+      "#": {
+        keyName: "tag",
+        list: [
+          {
+            tag: "666",
+          },
+        ],
+      },
     });
     return {
       atMap,
       onAt(chunk: string) {
         console.log("onAt:", chunk);
       },
-      renderInsertItem(row: { name: string; userId: string }): string {
+      renderTagItem(row: { name: string; userId: string }): string {
         return `<span style="color:#003569;" data-user-id="${row.userId}">@${row.name}</span>`;
       },
     };
