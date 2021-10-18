@@ -71,8 +71,8 @@ export default defineComponent({
     });
     return {
       atMap,
-      onAt(chunk: string) {
-        console.log("onAt:", chunk);
+      onAt({ at, inputChunk }: { at: string; inputChunk: string }) {
+        console.log("onAt:", at, inputChunk);
       },
       renderTagItem(
         row: { name: string; userId: string } | { tag: string }

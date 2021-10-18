@@ -287,7 +287,7 @@ export default defineComponent({
         }
         ctx.emit("at", {
           at: curAt,
-          curInputChunk,
+          inputChunk: curInputChunk,
         });
         filterList();
       },
