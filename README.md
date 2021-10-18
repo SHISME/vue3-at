@@ -1,5 +1,7 @@
 <img src="./demo/demo1.jpg" width="400" />
 
+It is a library like at.js for vue3.
+
 ## Install
 
 > npm install vue3-at --save
