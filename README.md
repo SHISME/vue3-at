@@ -92,30 +92,47 @@ export default defineComponent({
 
 ## Props
 
-### atMap required
-`{ [at: string]: {list: any[];keyName: string;[]} }`
+### atMap
+required
+
+```typescript
+interface AtMap{ [at: string]: {list: any[];keyName: string;[]} }
+```
 
 key is 'at' character which when you input it will show the list,keyName is the property name of the list's item.
 
-### renderTagItem (item: any) => string; optional
-
+### renderTagItem 
+optional
+```typescript
+type RenderTagItem = (item: any) => string; 
+```
 Use iit to render custom tag
 
-### disabledModifyTag boolean; optional default true;
+### disabledModifyTag
+
+boolean; optional; default true;
 
 If you want tag can be modified,set it to false
 
-### showSubjectTitle boolean; optional default true;
+### showSubjectTitle
+
+boolean; optional; default true;
 
 It will control the visible of subject title
 
-### allowSpaces boolean; optional default false;
+### allowSpaces
+
+boolean; optional; default false;
 
 Enable space between @ and word
 
-### filtersFn optional
+### filtersFn
 
-`(item:any, inputChunk:string, keyName:string) => boolean`
+optional
+
+```typescript
+type FiltersFn = (item:any, inputChunk:string, keyName:string) => boolean;
+```
 
 If you want to filter by your self, use it to control.
 
