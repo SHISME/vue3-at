@@ -92,51 +92,53 @@ export default defineComponent({
 
 ## Props
 
-### atMap
-required
-
 ```typescript
-interface AtMap{ [at: string]: {list: any[];keyName: string;[]} }
+
+interface IVue3AtProps {
+  /**
+   * required
+   * key is 'at' character which when you input it will show the list,keyName is the property name of the list's item.
+   */
+  atMap:{ [at: string]: {list: any[];keyName: string;[]} };
+  
+  /**
+   * optional
+   * Use it to render custom tag
+   * @param item; atMap list's item
+   */
+  renderTagItem:(item: any) => string;
+  
+  /**
+   * optional
+   * If you want tag can be modified,set it to false
+   * @default true
+   */
+  disabledModifyTag: boolean;
+  
+  /**
+   * optional
+   * It will control the visible of subject title
+   * 
+   * @default true;
+   */
+  showSubjectTitle: boolean;
+  
+  /**
+   * optional
+   * Enable space between @ and word
+   * 
+   * @default false;
+   */
+  allowSpaces: boolean;
+  
+  /**
+   * optional
+   * If you want to filter by your self, use it to control.
+   * @param item; atMap list's item
+   * @param inputChunk; inputing chunk
+   * @param keyName;
+   */
+  filtersFn:(item:any, inputChunk:string, keyName:string) => boolean;
+}
+
 ```
-
-key is 'at' character which when you input it will show the list,keyName is the property name of the list's item.
-
-### renderTagItem 
-optional
-```typescript
-type RenderTagItem = (item: any) => string; 
-```
-Use iit to render custom tag
-
-### disabledModifyTag
-
-boolean; optional; default true;
-
-If you want tag can be modified,set it to false
-
-### showSubjectTitle
-
-boolean; optional; default true;
-
-It will control the visible of subject title
-
-### allowSpaces
-
-boolean; optional; default false;
-
-Enable space between @ and word
-
-### filtersFn
-
-optional
-
-```typescript
-type FiltersFn = (item:any, inputChunk:string, keyName:string) => boolean;
-```
-
-If you want to filter by your self, use it to control.
-
-
-
-
-
