@@ -1,7 +1,6 @@
 {
   "name": "vue3-at",
   "version": "0.1.0",
-  "private": false,
   "main": "./lib/vue3-at.umd.min.js",
   "scripts": {
     "serve": "vue-cli-service serve",
