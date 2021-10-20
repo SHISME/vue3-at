@@ -59,18 +59,3 @@ export default defineComponent({
   },
 });
 </script>
-<style>
-.at-list {
-  top: 100%;
-  width: 100%;
-  box-shadow: 0 2px 10px 0 rgba(0, 0, 0, 0.1), 0 0 2px 0 rgba(0, 0, 0, 0.12);
-  position: absolute;
-  background: #fff;
-}
-.at-list__item--active {
-  background-color: rgb(245, 245, 245);
-}
-.at-list__subject-title {
-  text-align: left;
-}
-</style>

@@ -299,10 +299,3 @@ export default defineComponent({
   },
 });
 </script>
-
-<style>
-.at-wrapper {
-  position: relative;
-  display: inline-block;
-}
-</style>
