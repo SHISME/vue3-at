@@ -1,14 +1,12 @@
 <img src="./demo/demo1.jpg" width="400" />
 
-[中文文档](./README.zh.md);
+这是一个基于vue3实现的用来实现@人的组件
 
-It is a library like at.js for vue3.
-
-## Install
+## 安装
 
 > npm install vue3-at --save
 
-## Usage
+## 用法
 
 ```vue
 
@@ -110,28 +108,30 @@ export default defineComponent({
 interface IVue3AtProps {
   /**
    * required
-   * key is 'at' character which when you input it will show the list,
-   * keyName is the property name of the list's item.
+   * 
+   * map的key是用来触发@的关键字，如果你设置为 '#',这个字符就会触发匹配关键字
+   * list是要匹配的列表，如果列表中的选项的isSubjectTitle为true，那么匹配的时候会自动过滤掉他
+   * keyName是用指用list的哪个字段来做匹配，如果你设置了filtersFn，那么这个不填也没啥影响
    */
   atMap:{ [at: string]: {list: any[];keyName: string;[]} };
   
   /**
    * optional
-   * Use it to render custom tag
+   * 这个是用来自定义渲染插入的tag长啥样
    * @param item; atMap list's item
    */
   renderTagItem:(item: any) => string;
   
   /**
    * optional
-   * If you want tag can be modified,set it to false
+   * 如果你想要你插入的tag可以继续修改，就设置这个为false
    * @default true
    */
   disabledModifyTag: boolean;
   
   /**
    * optional
-   * It will control the visible of subject title
+   * 是否显示list中isSubjectTitle为true的选项
    * 
    * @default true;
    */
@@ -139,7 +139,7 @@ interface IVue3AtProps {
   
   /**
    * optional
-   * Enable space between @ and word
+   * 是否允许匹配时中间是否能有空格，例如 @ 他 这样
    * 
    * @default false;
    */
@@ -147,9 +147,9 @@ interface IVue3AtProps {
   
   /**
    * optional
-   * If you want to filter by your self, use it to control.
-   * @param item; atMap list's item
-   * @param inputChunk; inputing chunk
+   * 自定义匹配规则
+   * @param item; 
+   * @param inputChunk; 当前匹配的内容
    * @param keyName;
    */
   filtersFn:(item:any, inputChunk:string, keyName:string) => boolean;
@@ -161,18 +161,18 @@ interface IVue3AtProps {
 
 ### at
 
-parameter: `{at: string; inputChunk:string}` 
+parameter: `{at: string; inputChunk:string}`
 
-when at will be input
+当触发@的时候会触发，回传参数会告诉你是哪个关键字触发的，还有关键字后面的内容
 
 ### insert-tag
 
-parameter is the item which will be inserted
+插入tag时触发，参数是被插入的选项的值
 
 ### click-list-item
 
-parameter is the item which had be clicked in list.
+点击列表中的item事件，参数是点击的选项的值
 
 ### input
 
-no parameter.
+输入事件，无回调值
