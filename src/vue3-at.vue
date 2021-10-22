@@ -31,6 +31,7 @@ import {
   getRangeTagContainer,
 } from "./util";
 import AtList from "./at-list.vue";
+import './vue3-at.css';
 
 export default defineComponent({
   name: "App",
