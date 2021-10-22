@@ -1,5 +1,7 @@
 <img src="./demo/demo1.jpg" width="400" />
 
+[demo](https://shisme.github.io/vue3-at/)
+
 这是一个基于vue3实现的用来实现@人的组件
 
 ## 安装
