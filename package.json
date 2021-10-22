@@ -6,6 +6,7 @@
     "dev": "vue-cli-service serve",
     "test:unit": "vue-cli-service test:unit",
     "build": "vue-cli-service build --target lib --name vue3-at --dest lib src/index.ts",
+    "build:docs": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "peerDependencies": {
