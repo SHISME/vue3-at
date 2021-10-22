@@ -176,3 +176,9 @@ parameter is the item which had be clicked in list.
 ### input
 
 no parameter.
+
+## slot
+
+### list-item
+
+slot scoped:item,curIndex,index

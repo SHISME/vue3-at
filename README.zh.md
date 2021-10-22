@@ -176,3 +176,11 @@ parameter: `{at: string; inputChunk:string}`
 ### input
 
 输入事件，无回调值
+
+## slot
+
+### list-item
+
+下拉列表的选项
+
+slot scoped:item,curIndex,index
